@@ -21,6 +21,14 @@ void Snake::update() {
   } else {
     m_body.pop_back();
   }
+  if (m_segm_to_remove) {
+    for (int i = 0; i < m_segm_to_remove; i++) {
+      if (m_body.size() < 4)
+        break;
+      m_body.pop_back();
+    }
+    mark_segments_removed();
+  }
 }
 
 void Snake::reset() {

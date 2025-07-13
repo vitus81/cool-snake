@@ -11,7 +11,16 @@ struct game_globals_struct {
   int cell_size = 30;
   int cell_count = 25;
   int offset = 75;
-  std::string img_path = "../../resources/";
+  std::string img_path = "./resources/";
+
+  int prob_bonus = 5;
+  int score_bonus = 3;
+  int length_bonus = 3; // decrease
+  int timeout_bonus = 5; // seconds
+
+  int score_regular = 1;
+  int length_regular = 1;
+
 };
 
 #endif

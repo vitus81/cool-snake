@@ -40,9 +40,12 @@ public:
   inline std::deque<Vector2> get_body() { return m_body; }
   inline void mark_to_add_segment() { m_add_segment = true; };
   inline void mark_segment_added() { m_add_segment = false; };
+  inline void mark_to_remove_segments(int n) { m_segm_to_remove = n; };
+  inline void mark_segments_removed() { m_segm_to_remove = 0; };
 
 private:
   bool m_add_segment = false;
+  int m_segm_to_remove = 0;
   std::deque<Vector2> m_body = {Vector2{6, 9}, Vector2{5, 9}, Vector2{4, 9}};
   Vector2 m_direction = {1, 0};
 };
