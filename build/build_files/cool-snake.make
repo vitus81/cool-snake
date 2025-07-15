@@ -187,9 +187,11 @@ OBJECTS :=
 GENERATED += $(OBJDIR)/food.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/snake.o
+GENERATED += $(OBJDIR)/wall.o
 OBJECTS += $(OBJDIR)/food.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/snake.o
+OBJECTS += $(OBJDIR)/wall.o
 
 # Rules
 # #############################################
@@ -260,6 +262,9 @@ $(OBJDIR)/main.o: ../../src/main.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/snake.o: ../../src/snake.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/wall.o: ../../src/wall.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

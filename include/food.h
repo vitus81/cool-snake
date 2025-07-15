@@ -13,6 +13,7 @@
 typedef enum {
   FOOD_REGULAR = 0,
   FOOD_BONUS = 1,
+  FOOD_SURPRISE = 2,
   NUM_FOOD_CATEGORIES
 } Food_cat_t;
 
