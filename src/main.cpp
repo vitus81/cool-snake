@@ -60,7 +60,8 @@ int get_unique_food_id(int cat, int type) {
 };
 
 void Game::draw() {
-  m_snake.draw();
+  for (auto &snake : m_snake_vec)
+    snake.draw();
   for (auto &food : m_food_vec)
     food.draw();
   for (auto &wall : m_wall_vec)
@@ -69,7 +70,7 @@ void Game::draw() {
 
 std::vector<Vector2> Game::get_forbidden() {
   std::vector<Vector2> forbidden;
-  for (auto &i : m_snake.get_body()) {
+  for (auto &i : m_snake->get_body()) {
     forbidden.push_back(i);
   }
   for (auto &i : m_food_vec) {
@@ -88,8 +89,9 @@ void Game::check_food_collision() {
   Food_cat_t collision_cat;
   std::vector<Food>::iterator collision_it;
   int collision_type;
+  
   for (auto it = m_food_vec.begin(); it != m_food_vec.end(); it++) {
-    if (Vector2Equals(m_snake.get_head(), it->get_position())) {
+    if (Vector2Equals(m_snake->get_head(), it->get_position())) {
       // Mark for deletion
       collisions++;
       collision_it = it;
@@ -100,7 +102,7 @@ void Game::check_food_collision() {
 
   if (collisions) {
 
-    m_snake.highlight_head();
+    m_snake->highlight_head();
 
     // Delete and update food
     m_food_vec.erase(collision_it);
@@ -130,11 +132,11 @@ void Game::check_food_collision() {
 
     if (collision_cat == FOOD_REGULAR) {
       PlaySound(m_food_sound);
-      m_snake.mark_to_add_segment();
+      m_snake->mark_to_add_segment();
       m_score += (m_total_multiplier * game_globals.score_regular);
     } else if (collision_cat == FOOD_BONUS) {
       PlaySound(m_hourglass_sound);
-      m_snake.mark_to_remove_segments(game_globals.length_bonus);
+      m_snake->mark_to_remove_segments(game_globals.length_bonus);
       m_score += (m_total_multiplier * game_globals.score_bonus);
     } else if (collision_cat == FOOD_SURPRISE) {
       int val = GetRandomValue(0, 100);
@@ -143,7 +145,7 @@ void Game::check_food_collision() {
         m_next_bonus_multiplier = 10;
       } else {
         PlaySound(m_wall_sound);
-        int snake_len = m_snake.get_body().size();
+        int snake_len = m_snake->get_body().size();
         int max_wall_len = 3;
         if (snake_len <= 10) {
           max_wall_len = (int)(game_globals.cell_count * 0.75);
@@ -156,7 +158,7 @@ void Game::check_food_collision() {
         } else {
           max_wall_len = (int)(game_globals.cell_count * 0.125);
         }
-        m_wall_vec.push_back(Wall(12, get_forbidden(), m_snake.get_head()));
+        m_wall_vec.push_back(Wall(12, get_forbidden(), m_snake->get_head()));
       }
     }
   }
@@ -184,39 +186,74 @@ void Game::check_bonus_timeout() {
 
 void Game::check_game_over() {
 
-  bool collision_with_edge = false;
-  bool collision_with_tail = false;
-  bool collision_with_wall = false;
-  if (m_snake.get_head().x >= game_globals.cell_count ||
-      m_snake.get_head().x < 0 ||
-      m_snake.get_head().y >= game_globals.cell_count ||
-      m_snake.get_head().y < 0) {
-    collision_with_edge = true;
-  }
-  std::deque<Vector2> body = m_snake.get_body();
-  for (int i = 1; i < body.size(); i++) {
-    if (Vector2Equals(m_snake.get_head(), body[i])) {
-      collision_with_tail = true;
+  int ii = 0;
+  std::vector<int> despawn_snakes;
+  for (auto &snake : m_snake_vec) {
+
+    bool collision_with_edge = false;
+    bool collision_with_tail = false;
+    bool collision_with_wall = false;
+    bool collision_with_enemy = false;
+
+    if (snake.get_head().x >= game_globals.cell_count ||
+        snake.get_head().x < 0 ||
+        snake.get_head().y >= game_globals.cell_count ||
+        snake.get_head().y < 0) {
+      collision_with_edge = true;
     }
-  }
-  for (auto &wall : m_wall_vec) {
-    for (auto &tile : wall.get_tiles()) {
-      if (Vector2Equals(m_snake.get_head(), tile)) {
-        collision_with_wall = true;
+    std::deque<Vector2> body = m_snake->get_body();
+    for (int i = 1; i < body.size(); i++) {
+      if (Vector2Equals(snake.get_head(), body[i])) {
+        collision_with_tail = true;
       }
     }
+    for (auto &wall : m_wall_vec) {
+      for (auto &tile : wall.get_tiles()) {
+        if (Vector2Equals(snake.get_head(), tile)) {
+          collision_with_wall = true;
+        }
+      }
+    }
+
+    // Collision with other snake
+    for (int jj = 0; jj < m_snake_vec.size(); jj++) {
+      if (jj != ii) {
+        for (auto &tile : m_snake_vec[jj].get_body()) {
+          if (Vector2Equals(snake.get_head(), tile)) {
+            collision_with_enemy = true;
+          }
+        }
+      }
+    }
+
+    if (collision_with_edge || collision_with_tail || collision_with_wall ||
+        collision_with_enemy) {
+      if (snake.get_controller() == PLAYER) {
+        PlaySound(m_gameover_sound);
+        game_over();
+      } else {
+        despawn_snakes.push_back(ii);
+      }
+    }
+
+    std::cout << "Snake " << ii << " |  " << collision_with_edge << " "
+              << collision_with_tail << " " << collision_with_wall << " "
+              << collision_with_enemy << std::endl;
+    ii++;
   }
 
-  if (collision_with_edge || collision_with_tail || collision_with_wall) {
-    PlaySound(m_gameover_sound);
-    game_over();
+  // Despawn dead snakes
+  for (int kk = despawn_snakes.size() - 1; kk >= 0; kk--) {
+    m_snake_vec.erase(m_snake_vec.begin() + despawn_snakes[kk]);
+    m_snake_vec.push_back(Snake(AI_RANDOM, game_globals.initial_enemy_pos));
   }
+  despawn_snakes.clear();
 }
 
 void Game::game_over() {
   m_running = false;
   m_first_game = false;
-  m_snake.reset();
+  m_snake->reset();
   m_food_vec.clear();
   m_last_score = m_score;
   m_score = 0;
@@ -229,12 +266,14 @@ void Game::game_over() {
   for (int i = 0; i < NUM_FOOD_INSTANCES; i++) {
     m_food_vec.push_back(Food(get_forbidden()));
   }
+  for (auto& snake : m_snake_vec) snake.reset();
   m_wall_vec.clear();
 }
 
 void Game::update() {
   if (m_running) {
-    m_snake.update();
+    for (auto &snake : m_snake_vec)
+      snake.update();
     check_food_collision();
     check_bonus_timeout();
     check_game_over();
@@ -262,16 +301,16 @@ int main() {
     BeginDrawing();
 
     if (IsKeyPressed(KEY_UP)) {
-      game.m_snake.try_move_up();
+      game.m_snake->try_move_up();
     }
     if (IsKeyPressed(KEY_DOWN)) {
-      game.m_snake.try_move_down();
+      game.m_snake->try_move_down();
     }
     if (IsKeyPressed(KEY_LEFT)) {
-      game.m_snake.try_move_left();
+      game.m_snake->try_move_left();
     }
     if (IsKeyPressed(KEY_RIGHT)) {
-      game.m_snake.try_move_right();
+      game.m_snake->try_move_right();
     }
     if (IsKeyPressed(KEY_ENTER)) {
       game.m_running = true;
@@ -295,7 +334,7 @@ int main() {
                game_globals.offset +
                    game_globals.cell_count * game_globals.cell_size + 10,
                40, game_globals.dark_green);
-      DrawText(TextFormat("Length %4i", game.m_snake.get_body().size()),
+      DrawText(TextFormat("Length %4i", game.m_snake->get_body().size()),
                game_globals.offset + 520,
                game_globals.offset +
                    game_globals.cell_count * game_globals.cell_size + 10,

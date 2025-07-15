@@ -3,7 +3,9 @@
 
 #include "raylib.h"
 
+#include <deque>
 #include <string>
+#include <vector>
 
 struct game_globals_struct {
   Color green = {192, 230, 149, 255};
@@ -31,6 +33,9 @@ struct game_globals_struct {
   int timeout_bonus = 5; // seconds
 
   int surprise_bonus_multiplier = 10;
+
+  std::deque<Vector2> initial_player_pos = {Vector2{6, 9}, Vector2{5, 9}, Vector2{4, 9}};
+  std::deque<Vector2> initial_enemy_pos = {Vector2{18, 6}, Vector2{18, 5}, Vector2{18, 4},Vector2{18, 3}, Vector2{18, 2}, Vector2{18, 1},};
 
 };
 

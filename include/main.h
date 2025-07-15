@@ -14,15 +14,19 @@
 #include <string>
 #include <vector>
 
+
+extern game_globals_struct game_globals;
+
 #define NUM_FOOD_INSTANCES (4)
 
 #define SOUND_PATH (std::string("./resources/"))
 
 class Game {
-public:
-  Snake m_snake = Snake();
+public:  
+  std::vector<Snake> m_snake_vec;
   std::vector<Food> m_food_vec;
   std::vector<Wall> m_wall_vec;
+  Snake* m_snake; // pointer to player snake
   bool m_running = false;
   bool m_first_game = true;
   int m_score = 0;
@@ -51,8 +55,12 @@ public:
     m_wall_sound = LoadSound((SOUND_PATH + "wall.wav").c_str());
     m_hourglass_sound = LoadSound((SOUND_PATH + "hourglass.wav").c_str());;
     
-    m_snake.reset();
     m_wall_vec.clear();
+
+    m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
+    m_snake_vec.push_back(Snake(AI_RANDOM, game_globals.initial_enemy_pos));
+    m_snake = &m_snake_vec[0];
+    m_snake->reset();
 
     std::vector<Vector2> dummy;
     for (int i = 0; i < NUM_FOOD_INSTANCES; i++)
