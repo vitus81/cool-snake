@@ -87,15 +87,15 @@ void Snake::decide_direction(Game_grid_t &grid) {
             (candidate.y) >= 0 && (candidate.y) < game_globals.cell_count) {
           if (grid[candidate.y][candidate.x] == 0) {
             allowed.push_back(d);
-            std::cout << d.x << "," << d.y << " | " << candidate.x << ","
-                      << candidate.y << " is allowed" << std::endl;
+            // std::cout << d.x << "," << d.y << " | " << candidate.x << ","
+            //           << candidate.y << " is allowed" << std::endl;
           }
         }
       }
     }
     if (allowed.size() == 0) {
       // do nothing, will die
-      std::cout << "No free cells!" << std::endl;
+      // std::cout << "No free cells!" << std::endl;
     } else {
       int prob_keep_old = 0;
       if (is_vec2_in_vec(m_direction, allowed)) {
@@ -105,11 +105,11 @@ void Snake::decide_direction(Game_grid_t &grid) {
       if (tmp >= prob_keep_old) {
         n = GetRandomValue(0, allowed.size() - 1);
         m_direction = allowed[n];
-        std::cout << "Chose " << m_direction.x << "," << m_direction.y
-                  << " rnd " << n << std::endl;
+        // std::cout << "Chose " << m_direction.x << "," << m_direction.y
+        //           << " rnd " << n << std::endl;
       } else {
         // keep olp direction
-        std::cout << "Kept old direction" << std::endl;
+        // std::cout << "Kept old direction" << std::endl;
       }
     }
   } else if (m_controller == AI_OUTER) {
@@ -124,8 +124,8 @@ void Snake::decide_direction(Game_grid_t &grid) {
             (candidate.y) >= 0 && (candidate.y) < game_globals.cell_count) {
           if (grid[candidate.y][candidate.x] == 0) {
             allowed.push_back(d);
-            std::cout << d.x << "," << d.y << " | " << candidate.x << ","
-                      << candidate.y << " is allowed" << std::endl;
+            // std::cout << d.x << "," << d.y << " | " << candidate.x << ","
+            //           << candidate.y << " is allowed" << std::endl;
           }
         }
       }

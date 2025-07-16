@@ -27,6 +27,7 @@ public:
   std::vector<Wall> m_wall_vec;
   Snake *m_snake; // pointer to player snake
   bool m_running = false;
+  bool m_paused = false;
   bool m_first_game = true;
   int m_score = 0;
   int m_last_score = 0;
@@ -59,6 +60,7 @@ public:
     m_snake_vec.reserve(100); // prevent address change
     m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
     m_snake_vec.push_back(spawn_snake());
+
     m_snake = &(m_snake_vec[0]);
     m_snake->reset();
 
@@ -86,6 +88,7 @@ public:
     CloseAudioDevice();
   }
   void draw();
+  void write_text();
   void update();
   void check_food_collision();
   void check_bonus_timeout();

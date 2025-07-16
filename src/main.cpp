@@ -177,6 +177,7 @@ void Game::check_food_collision() {
       // Actual actions
       m_total_multiplier = m_streak_multiplier * m_bonus_multiplier;
 
+      int prev_score = m_score;
       if (collision_cat == FOOD_REGULAR) {
         snake.mark_to_add_segment();
         if (snake.get_controller() == PLAYER) {
@@ -214,6 +215,12 @@ void Game::check_food_collision() {
           }
         }
       }
+      if (m_score >= 100 && prev_score < 100)
+        spawn_in_seconds(1);
+      if (m_score >= 200 && prev_score < 200)
+        spawn_in_seconds(1);
+      if (m_score >= 300 && prev_score < 300)
+        spawn_in_seconds(1);
     }
   }
 }
@@ -329,9 +336,9 @@ void Game::check_spawn() {
   }
 }
 
-Snake Game::spawn_snake() {  
-  int rnd_mode = GetRandomValue(1,NUM_CONTROLLERS-1);
-  Snake_ctrl_t ctrl = (Snake_ctrl_t) rnd_mode;
+Snake Game::spawn_snake() {
+  int rnd_mode = GetRandomValue(1, NUM_CONTROLLERS - 1);
+  Snake_ctrl_t ctrl = (Snake_ctrl_t)rnd_mode;
   Game_grid_t grid = get_grid_blocked();
 
   int best_x = 0;
@@ -367,6 +374,7 @@ void Game::game_over() {
 
   get_grid_blocked();
   m_running = false;
+  m_paused = false;
   m_first_game = false;
   m_food_vec.clear();
   m_last_score = m_score;
@@ -380,6 +388,10 @@ void Game::game_over() {
   for (int i = 0; i < NUM_FOOD_INSTANCES; i++) {
     m_food_vec.push_back(Food(get_forbidden()));
   }
+  m_snake_vec.clear();
+  m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
+  m_snake_vec.push_back(spawn_snake());
+  m_snake = &(m_snake_vec[0]);
   for (auto &snake : m_snake_vec)
     snake.reset();
   m_wall_vec.clear();
@@ -395,6 +407,48 @@ void Game::update() {
     check_food_collision();
     check_bonus_timeout();
     check_game_over();
+  }
+}
+
+void Game::write_text() {
+  if (m_running) {
+    DrawText(TextFormat("Score %4i", m_score), game_globals.offset - 5,
+             game_globals.offset +
+                 game_globals.cell_count * game_globals.cell_size + 10,
+             40, game_globals.dark_green);
+    DrawText(TextFormat("Length %4i", m_snake->get_body().size()),
+             game_globals.offset + 520,
+             game_globals.offset +
+                 game_globals.cell_count * game_globals.cell_size + 10,
+             40, game_globals.dark_green);
+    if (m_next_bonus_multiplier > 1) {
+      DrawText(TextFormat("%ix", m_next_bonus_multiplier),
+               game_globals.offset - 5, 20, 40, game_globals.dark_green);
+    }
+    if (m_streak_len > 1)
+      DrawText(TextFormat("Streak %2i", m_streak_len),
+               game_globals.offset + 550, 20, 40, game_globals.dark_green);
+  }
+
+  if (!m_running && !m_paused && !m_first_game) {
+    DrawRectangle(game_globals.offset, game_globals.offset,
+                  game_globals.cell_count * game_globals.cell_size,
+                  game_globals.cell_count * game_globals.cell_size,
+                  game_globals.green);
+    DrawText("GAME OVER", game_globals.offset + 120, game_globals.offset + 300,
+             80, game_globals.dark_green);
+    DrawText(TextFormat("Score %4i", m_last_score), game_globals.offset + 240,
+             game_globals.offset + 400, 50, game_globals.dark_green);
+    DrawText("Press ENTER to restart", game_globals.offset + 150,
+             game_globals.offset + 500, 35, game_globals.dark_green);
+  }
+  if (!m_running && !m_paused && m_first_game) {
+    DrawText("Press ENTER to start", game_globals.offset + 180,
+             game_globals.offset + 500, 35, game_globals.dark_green);
+  }
+  if (!m_running && m_paused) {
+    DrawText("GAME PAUSED", game_globals.offset + 250,
+             game_globals.offset + 500, 35, game_globals.dark_green);
   }
 }
 
@@ -433,6 +487,10 @@ int main() {
     if (IsKeyPressed(KEY_ENTER)) {
       game.m_running = true;
     }
+    if (IsKeyPressed(KEY_SPACE)) {
+      game.m_running = !game.m_running;
+      game.m_paused = !game.m_paused;
+    }
 
     if (event_triggered(0.1))
       game.update();
@@ -446,42 +504,7 @@ int main() {
     DrawRectangleLinesEx(rect, 5, game_globals.dark_green);
 
     game.draw();
-
-    if (game.m_running) {
-      DrawText(TextFormat("Score %4i", game.m_score), game_globals.offset - 5,
-               game_globals.offset +
-                   game_globals.cell_count * game_globals.cell_size + 10,
-               40, game_globals.dark_green);
-      DrawText(TextFormat("Length %4i", game.m_snake->get_body().size()),
-               game_globals.offset + 520,
-               game_globals.offset +
-                   game_globals.cell_count * game_globals.cell_size + 10,
-               40, game_globals.dark_green);
-      if (game.m_next_bonus_multiplier > 1) {
-        DrawText(TextFormat("%ix", game.m_next_bonus_multiplier),
-                 game_globals.offset - 5, 20, 40, game_globals.dark_green);
-      }
-      DrawText(TextFormat("Streak %2i", game.m_streak_len),
-               game_globals.offset + 550, 20, 40, game_globals.dark_green);
-    }
-
-    if (!game.m_running && !game.m_first_game) {
-      DrawRectangle(game_globals.offset, game_globals.offset,
-                    game_globals.cell_count * game_globals.cell_size,
-                    game_globals.cell_count * game_globals.cell_size,
-                    game_globals.green);
-      DrawText("GAME OVER", game_globals.offset + 120,
-               game_globals.offset + 300, 80, game_globals.dark_green);
-      DrawText(TextFormat("Score %4i", game.m_last_score),
-               game_globals.offset + 240, game_globals.offset + 400, 50,
-               game_globals.dark_green);
-      DrawText("Press ENTER to restart", game_globals.offset + 150,
-               game_globals.offset + 500, 35, game_globals.dark_green);
-    }
-    if (!game.m_running && game.m_first_game) {
-      DrawText("Press ENTER to start", game_globals.offset + 180,
-               game_globals.offset + 500, 35, game_globals.dark_green);
-    }
+    game.write_text();
 
     EndDrawing();
   }
