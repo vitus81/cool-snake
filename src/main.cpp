@@ -101,7 +101,7 @@ std::vector<Vector2> Game::get_blocked() {
   return blocked;
 }
 
-std::vector<std::vector<int>> Game::get_grid_blocked() {
+Game_grid_t Game::get_grid_blocked() {
   std::vector<std::vector<int>> tmp;
   tmp.resize(game_globals.cell_count);
   for (auto &item : tmp)
@@ -113,13 +113,13 @@ std::vector<std::vector<int>> Game::get_grid_blocked() {
   }
   std::vector<Vector2> blocked = get_blocked();
   for (auto &f : blocked) {
-    if (f.x > 0 && f.y > 0 && f.x < game_globals.cell_count &&
+    if (f.x >= 0 && f.y >= 0 && f.x < game_globals.cell_count &&
         f.y < game_globals.cell_count)
-      tmp[f.x][f.y] = 1;
+      tmp[f.y][f.x] = 1;
   }
   // for (int j = 0; j < game_globals.cell_count; j++) {
   //   for (int i = 0; i < game_globals.cell_count; i++) {
-  //     printf("%s", tmp[i][j]?"■":"□");
+  //     printf("%s", tmp[j][i]?"■":"□");
   //   }
   //   printf("\n");
   // }
@@ -282,8 +282,9 @@ void Game::check_game_over() {
         for (auto &tile : m_snake_vec[jj].get_body()) {
           if (Vector2Equals(snake.get_head(), tile)) {
             collision_with_enemy = true;
-            std::cout << "Collision of snakes " << ii << " with snake " << jj
-                      << std::endl;
+            std::cout << "Collision of snake " << ii << " with snake " << jj
+                      << " at " << snake.get_head().x << ","
+                      << snake.get_head().y << std::endl;
           }
         }
       }
@@ -323,16 +324,15 @@ void Game::check_spawn() {
     if (curr > (*it)) {
       m_snake_vec.push_back(spawn_snake());
       it = m_spawn_queue.erase(it);
-    }
-    else
+    } else
       ++it;
   }
 }
 
-Snake Game::spawn_snake() {
-  Snake_ctrl_t ctrl = AI_RANDOM_WALK; // TODO: handle other cases
-
-  std::vector<std::vector<int>> grid = get_grid_blocked();
+Snake Game::spawn_snake() {  
+  int rnd_mode = GetRandomValue(1,NUM_CONTROLLERS-1);
+  Snake_ctrl_t ctrl = (Snake_ctrl_t) rnd_mode;
+  Game_grid_t grid = get_grid_blocked();
 
   int best_x = 0;
   int best_cnt = 0;
@@ -353,14 +353,14 @@ Snake Game::spawn_snake() {
       best_x = x;
     }
   }
-  std::cout << "Spawning snake at x = " << best_x << "(" << best_cnt
+  std::cout << "Spawning snake at x = " << best_x << " (" << best_cnt
             << " free cells)" << std::endl;
 
   std::deque<Vector2> body;
-  body.push_back(Vector2{(float)best_x, 2});
-  body.push_back(Vector2{(float)best_x, 1});
   body.push_back(Vector2{(float)best_x, 0});
-  return Snake(AI_RANDOM_WALK, body);
+  body.push_back(Vector2{(float)best_x, -1});
+  body.push_back(Vector2{(float)best_x, -2});
+  return Snake(ctrl, body);
 }
 
 void Game::game_over() {
@@ -387,8 +387,10 @@ void Game::game_over() {
 
 void Game::update() {
   if (m_running) {
-    for (auto &snake : m_snake_vec)
-      snake.update();
+    for (auto &snake : m_snake_vec) {
+      Game_grid_t grid = get_grid_blocked();
+      snake.update(grid);
+    }
     check_spawn();
     check_food_collision();
     check_bonus_timeout();
@@ -410,8 +412,8 @@ int main() {
   SetTargetFPS(60);
 
   load_textures();
-  Game game = Game();
 
+  Game game = Game();
   while (!WindowShouldClose()) {
 
     BeginDrawing();

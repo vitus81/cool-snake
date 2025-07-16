@@ -8,13 +8,13 @@
 #include <deque>
 #include <vector>
 
-typedef enum { PLAYER = 0, AI_RANDOM_WALK, NUM_CONTROLLERS } Snake_ctrl_t;
+typedef enum { PLAYER = 0, AI_RANDOM_WALK, AI_OUTER, NUM_CONTROLLERS } Snake_ctrl_t;
 
 class Snake {
 public:
   Snake(Snake_ctrl_t ctrl, std::deque<Vector2> init_body);
   void draw();
-  void update();
+  void update(Game_grid_t& grid);
   void reset();
   inline void try_move_up() {
     if (m_direction.y != 1) {
@@ -63,7 +63,7 @@ private:
   Vector2 m_direction = {1, 0};
 
   void set_color();
-  void decide_direction();
+  void decide_direction(Game_grid_t& grid);
 };
 
 #endif

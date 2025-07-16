@@ -96,7 +96,7 @@ public:
   void spawn_in_seconds(float timeout);
   void check_spawn();
   Snake spawn_snake();
-  std::vector<std::vector<int>> get_grid_blocked();
+  Game_grid_t get_grid_blocked();
 
 private:
   std::vector<float> m_spawn_queue;

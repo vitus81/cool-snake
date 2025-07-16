@@ -6,6 +6,14 @@
 
 extern game_globals_struct game_globals;
 
+bool is_vec2_in_vec(Vector2 t, std::vector<Vector2> v) {
+  for (auto &vv : v) {
+    if (Vector2Equals(t, vv))
+      return true;
+  }
+  return false;
+}
+
 Snake::Snake(Snake_ctrl_t ctrl, std::deque<Vector2> init_body) {
   m_initial_body = init_body;
   m_body = init_body;
@@ -21,6 +29,10 @@ void Snake::set_color() {
     break;
   case AI_RANDOM_WALK:
     m_color = {252, 186, 3, 255};
+    m_head_color = m_color;
+    break;
+  case AI_OUTER:
+    m_color = {130, 68, 150, 255};
     m_head_color = m_color;
     break;
   default:
@@ -50,59 +62,110 @@ void Snake::draw() {
   }
 }
 
-void Snake::decide_direction() {
+void Snake::decide_direction(Game_grid_t &grid) {
+
+  const std::vector<Vector2> directions = {Vector2{0, -1}, Vector2{0, 1},
+                                           Vector2{-1, 0}, Vector2{1, 0}};
+
   if (m_controller == AI_RANDOM_WALK) {
-    bool valid_sum = true;
-    bool valid_range = false;
-    bool valid = false;
-    Vector2 new_direction;
-    Vector2 sum_direction;
-    do {
-      valid_sum = true;
-      valid_range = false;
-      valid = false;
-      int change_dir = GetRandomValue(0, 100);
-      if (change_dir < 30) {
-        int rnd_val = GetRandomValue(0, 3);
-        switch (rnd_val) {
-        case 0:
-          new_direction.x = 0;
-          new_direction.y = 1;
-          break;
-        case 1:
-          new_direction.x = 1;
-          new_direction.y = 0;
-          break;
-        case 2:
-          new_direction.x = 0;
-          new_direction.y = -1;
-          break;
-        default:
-          new_direction.x = -1;
-          new_direction.y = 0;
+
+    // for (int j = 0; j < game_globals.cell_count; j++) {
+    //   for (int i = 0; i < game_globals.cell_count; i++) {
+    //     printf("%s", grid[j][i] ? "■" : "□");
+    //   }
+    //   printf("\n");
+    // }
+
+    int n = -1;
+    Vector2 candidate;
+    std::vector<Vector2> allowed;
+    allowed.clear();
+    for (auto &d : directions) {
+      candidate = Vector2Add(get_head(), d);
+      if (!Vector2Equals(Vector2Add(m_direction, d), Vector2{0, 0})) {
+        if ((candidate.x) >= 0 && (candidate.x) < game_globals.cell_count &&
+            (candidate.y) >= 0 && (candidate.y) < game_globals.cell_count) {
+          if (grid[candidate.y][candidate.x] == 0) {
+            allowed.push_back(d);
+            std::cout << d.x << "," << d.y << " | " << candidate.x << ","
+                      << candidate.y << " is allowed" << std::endl;
+          }
         }
+      }
+    }
+    if (allowed.size() == 0) {
+      // do nothing, will die
+      std::cout << "No free cells!" << std::endl;
+    } else {
+      int prob_keep_old = 0;
+      if (is_vec2_in_vec(m_direction, allowed)) {
+        prob_keep_old = 50;
+      }
+      int tmp = GetRandomValue(0, 100);
+      if (tmp >= prob_keep_old) {
+        n = GetRandomValue(0, allowed.size() - 1);
+        m_direction = allowed[n];
+        std::cout << "Chose " << m_direction.x << "," << m_direction.y
+                  << " rnd " << n << std::endl;
       } else {
-        new_direction = m_direction;
-      };
-      sum_direction = Vector2Add(m_direction, new_direction);
-      if (sum_direction.x == 0 && sum_direction.y == 0)
-        valid_sum = false;
-      if ((get_head().x + new_direction.x) >= 0 &&
-          (get_head().x + new_direction.x) < game_globals.cell_count &&
-          (get_head().y + new_direction.y) >= 0 &&
-          (get_head().y + new_direction.y) < game_globals.cell_count)
-        valid_range = true;
-      valid = valid_sum && valid_range;
-    } while (!valid);
-    m_direction = new_direction;
-    // std::cout << m_direction.x << "," << m_direction.y <<std::endl;
+        // keep olp direction
+        std::cout << "Kept old direction" << std::endl;
+      }
+    }
+  } else if (m_controller == AI_OUTER) {
+    int n = -1;
+    Vector2 candidate;
+    std::vector<Vector2> allowed;
+    allowed.clear();
+    for (auto &d : directions) {
+      candidate = Vector2Add(get_head(), d);
+      if (!Vector2Equals(Vector2Add(m_direction, d), Vector2{0, 0})) {
+        if ((candidate.x) >= 0 && (candidate.x) < game_globals.cell_count &&
+            (candidate.y) >= 0 && (candidate.y) < game_globals.cell_count) {
+          if (grid[candidate.y][candidate.x] == 0) {
+            allowed.push_back(d);
+            std::cout << d.x << "," << d.y << " | " << candidate.x << ","
+                      << candidate.y << " is allowed" << std::endl;
+          }
+        }
+      }
+    }
+    if (allowed.size() == 0) {
+      // do nothing, will die
+      std::cout << "No free cells!" << std::endl;
+    } else {
+      int rnd_dec = GetRandomValue(0, 100);
+      const int prob_random = 10;
+      if (rnd_dec <= prob_random) {
+        n = GetRandomValue(0, allowed.size() - 1);
+        m_direction = allowed[n];
+      } else {
+        int max_abs = 0;
+        int curr;
+        int j = 0;
+        int x, y;
+        int max_idx = 0;
+        for (auto &d : allowed) {
+          candidate = Vector2Add(get_head(), d);
+          x = candidate.x - game_globals.cell_count / 2;
+          y = candidate.y - game_globals.cell_count / 2;
+          curr = x * x + y * y;
+          if (curr > max_abs) {
+            max_abs = curr;
+            max_idx = j;
+          }
+          j++;
+        }
+        m_direction = allowed[max_idx];
+      }
+    }
   }
 }
 
-void Snake::update() {
+void Snake::update(Game_grid_t &grid) {
 
   if (m_controller != PLAYER)
-    decide_direction();
+    decide_direction(grid);
 
   m_body.push_front(Vector2Add(m_body[0], m_direction));
   if (m_add_segment) {
