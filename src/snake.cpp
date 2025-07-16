@@ -1,6 +1,7 @@
 #include "snake.h"
 #include "constants.h"
 
+#include <iostream>
 #include <vector>
 
 extern game_globals_struct game_globals;
@@ -18,7 +19,7 @@ void Snake::set_color() {
     m_color = game_globals.dark_green;
     m_head_color = game_globals.head_highlight_color;
     break;
-  case AI_RANDOM:
+  case AI_RANDOM_WALK:
     m_color = {252, 186, 3, 255};
     m_head_color = m_color;
     break;
@@ -50,7 +51,7 @@ void Snake::draw() {
 }
 
 void Snake::decide_direction() {
-  if (m_controller == AI_RANDOM) {
+  if (m_controller == AI_RANDOM_WALK) {
     bool valid_sum = true;
     bool valid_range = false;
     bool valid = false;
@@ -60,8 +61,8 @@ void Snake::decide_direction() {
       valid_sum = true;
       valid_range = false;
       valid = false;
-      int change_dir = GetRandomValue(0, 1);
-      if (change_dir) {
+      int change_dir = GetRandomValue(0, 100);
+      if (change_dir < 30) {
         int rnd_val = GetRandomValue(0, 3);
         switch (rnd_val) {
         case 0:
@@ -94,6 +95,7 @@ void Snake::decide_direction() {
       valid = valid_sum && valid_range;
     } while (!valid);
     m_direction = new_direction;
+    // std::cout << m_direction.x << "," << m_direction.y <<std::endl;
   }
 }
 
@@ -120,6 +122,9 @@ void Snake::update() {
 
 void Snake::reset() {
   m_body = m_initial_body;
-  m_direction = {1, 0};
+  if (get_controller() == PLAYER)
+    m_direction = {1, 0};
+  else
+    m_direction = {0, 1};
   m_head_color = m_color;
 }

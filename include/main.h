@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-
 extern game_globals_struct game_globals;
 
 #define NUM_FOOD_INSTANCES (4)
@@ -22,11 +21,11 @@ extern game_globals_struct game_globals;
 #define SOUND_PATH (std::string("./resources/"))
 
 class Game {
-public:  
+public:
   std::vector<Snake> m_snake_vec;
   std::vector<Food> m_food_vec;
   std::vector<Wall> m_wall_vec;
-  Snake* m_snake; // pointer to player snake
+  Snake *m_snake; // pointer to player snake
   bool m_running = false;
   bool m_first_game = true;
   int m_score = 0;
@@ -51,20 +50,20 @@ public:
     InitAudioDevice();
     m_food_sound = LoadSound((SOUND_PATH + "food.wav").c_str());
     m_gameover_sound = LoadSound((SOUND_PATH + "gameover.wav").c_str());
-    m_bonus10x_sound = LoadSound((SOUND_PATH + "bonus10x.wav").c_str());
+    m_bonus10x_sound = LoadSound((SOUND_PATH + "bonusx10.wav").c_str());
     m_wall_sound = LoadSound((SOUND_PATH + "wall.wav").c_str());
-    m_hourglass_sound = LoadSound((SOUND_PATH + "hourglass.wav").c_str());;
-    
+    m_hourglass_sound = LoadSound((SOUND_PATH + "hourglass.wav").c_str());
+
     m_wall_vec.clear();
 
+    m_snake_vec.reserve(100); // prevent address change
     m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
-    m_snake_vec.push_back(Snake(AI_RANDOM, game_globals.initial_enemy_pos));
-    m_snake = &m_snake_vec[0];
+    m_snake_vec.push_back(spawn_snake());
+    m_snake = &(m_snake_vec[0]);
     m_snake->reset();
 
-    std::vector<Vector2> dummy;
     for (int i = 0; i < NUM_FOOD_INSTANCES; i++)
-      m_food_vec.push_back(Food(dummy));
+      m_food_vec.push_back(Food(get_forbidden()));
 
     // // TEMP: create some walls for testing
     // m_wall_vec.push_back(Wall(Vector2{4,0}, 5, NORTH_SOUTH));
@@ -77,9 +76,8 @@ public:
     // m_wall_vec.push_back(Wall(9, get_forbidden(), m_snake.get_head()));
     // m_wall_vec.push_back(Wall(6, get_forbidden(), m_snake.get_head()));
     // m_wall_vec.push_back(Wall(3, get_forbidden(), m_snake.get_head()));
-     
   };
-  ~Game(){
+  ~Game() {
     UnloadSound(m_food_sound);
     UnloadSound(m_gameover_sound);
     UnloadSound(m_bonus10x_sound);
@@ -94,8 +92,14 @@ public:
   void check_game_over();
   void game_over();
   std::vector<Vector2> get_forbidden();
+  std::vector<Vector2> get_blocked();
+  void spawn_in_seconds(float timeout);
+  void check_spawn();
+  Snake spawn_snake();
+  std::vector<std::vector<int>> get_grid_blocked();
 
 private:
+  std::vector<float> m_spawn_queue;
 };
 
 #endif

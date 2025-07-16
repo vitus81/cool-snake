@@ -8,7 +8,7 @@
 #include <deque>
 #include <vector>
 
-typedef enum { PLAYER, AI_RANDOM } Snake_ctrl_t;
+typedef enum { PLAYER = 0, AI_RANDOM_WALK, NUM_CONTROLLERS } Snake_ctrl_t;
 
 class Snake {
 public:
@@ -42,7 +42,7 @@ public:
   }
   inline Vector2 get_head() { return m_body[0]; }
   inline std::deque<Vector2> get_body() { return m_body; }
-  inline Snake_ctrl_t get_controller() {return m_controller;}
+  inline Snake_ctrl_t get_controller() { return m_controller; }
   inline void mark_to_add_segment() { m_add_segment = true; };
   inline void mark_segment_added() { m_add_segment = false; };
   inline void mark_to_remove_segments(int n) { m_segm_to_remove = n; };
