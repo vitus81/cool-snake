@@ -9,13 +9,23 @@
 #include <deque>
 #include <vector>
 
-typedef enum { PLAYER = 0, AI_RANDOM_WALK, AI_OUTER, AI_EAT_APPLES, AI_CHASE, NUM_CONTROLLERS } Snake_ctrl_t;
+typedef enum {
+  PLAYER = 0,
+  AI_RANDOM_WALK,
+  AI_OUTER,
+  AI_EAT_APPLES,
+  AI_CHASE,
+  AI_EAT_CLOSEST,
+  AI_TRAIN,
+  NUM_CONTROLLERS
+} Snake_ctrl_t;
 
 class Snake {
 public:
   Snake(Snake_ctrl_t ctrl, std::deque<Vector2> init_body);
   void draw();
-  void update(Game_grid_t& grid, std::vector<Food>& food, std::deque<Vector2> player_body);
+  void update(Game_grid_t &grid, std::vector<Food> &food,
+              std::deque<Vector2> player_body);
   void reset();
   inline void try_move_up() {
     if (m_direction.y != 1) {
@@ -62,13 +72,14 @@ private:
   bool m_head_highlight = false;
   int m_segm_to_remove = 0;
   Vector2 m_direction = {1, 0};
-  
-  void set_color();
-  void decide_direction(Game_grid_t& grid, std::vector<Food>& food, std::deque<Vector2> player_body);
-  Vector2 find_path(Game_grid_t& grid, Vector2 target, bool *fail);
-  Vector2 ai_eat_apples(Game_grid_t& grid, std::vector<Food>& food);
-  Vector2 ai_chase(Game_grid_t &grid, std::deque<Vector2> player_body);
 
+  void set_color();
+  void decide_direction(Game_grid_t &grid, std::vector<Food> &food,
+                        std::deque<Vector2> player_body);
+  Vector2 find_path(Game_grid_t &grid, Vector2 target, bool *fail);
+  Vector2 ai_eat_apples(Game_grid_t &grid, std::vector<Food> &food);
+  Vector2 ai_eat_closest(Game_grid_t &grid, std::vector<Food> &food);
+  Vector2 ai_chase(Game_grid_t &grid, std::deque<Vector2> player_body);
 };
 
 #endif

@@ -135,6 +135,10 @@ void Snake::set_color() {
     m_color = {50, 121, 168, 255};
     m_head_color = m_color;
     break;
+  case AI_EAT_CLOSEST:
+    m_color = {37, 190, 77, 255};
+    m_head_color = m_color;
+    break;
   default:
     m_color = {64, 64, 64, 255};
     m_head_color = m_color;
@@ -164,9 +168,9 @@ void Snake::draw() {
                     (float)game_globals.cell_size};
       DrawRectangleRounded(rec, 0.5, 6, m_head_color);
     } else {
-      Rectangle rec{x + game_globals.offset+3, y + game_globals.offset+3,
-                    (float)game_globals.cell_size-6,
-                    (float)game_globals.cell_size-6};      
+      Rectangle rec{x + game_globals.offset + 3, y + game_globals.offset + 3,
+                    (float)game_globals.cell_size - 6,
+                    (float)game_globals.cell_size - 6};
       DrawRectangleRounded(rec, 0.25, 6, m_color);
     }
   }
@@ -274,6 +278,10 @@ void Snake::decide_direction(Game_grid_t &grid, std::vector<Food> &food,
     m_direction = ai_eat_apples(grid, food);
   } else if (m_controller == AI_CHASE) {
     m_direction = ai_chase(grid, player_body);
+  } else if (m_controller == AI_EAT_CLOSEST) {
+    m_direction = ai_eat_closest(grid, food);
+  } else if (m_controller == AI_TRAIN) {
+    m_direction = ai_eat_closest(grid, food);
   }
 }
 
@@ -312,6 +320,30 @@ Vector2 Snake::ai_eat_apples(Game_grid_t &grid, std::vector<Food> &food) {
     }
   } else {
     target = tmp[0]; // go to the first apple found
+  }
+  return find_path(grid, target, fail);
+}
+
+Vector2 Snake::ai_eat_closest(Game_grid_t &grid, std::vector<Food> &food) {
+
+  Vector2 target;
+  bool *fail;
+  float shortest = 10000.0f;
+  int best_idx = 0;
+  int k = 0;
+  for (auto &f : food) {
+    float curr = Vector2Distance(get_head(), f.get_position());
+    if (curr < shortest) {
+      shortest = curr;
+      best_idx = k;
+    }
+    k++;
+  }
+  if (best_idx < food.size()) {
+    target = food[best_idx].get_position();
+  } else {
+    target.x = (game_globals.cell_count - 1) / 2;
+    target.y = (game_globals.cell_count - 1) / 2;
   }
   return find_path(grid, target, fail);
 }

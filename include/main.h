@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+// #define TRAINING
+
 extern game_globals_struct game_globals;
 
 #define NUM_FOOD_INSTANCES (4)
@@ -58,7 +60,11 @@ public:
     m_wall_vec.clear();
 
     m_snake_vec.reserve(100); // prevent address change
+#ifndef TRAINING
     m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
+#else
+    m_snake_vec.push_back(Snake(AI_TRAIN, game_globals.initial_player_pos));
+#endif
     m_snake_vec.push_back(spawn_snake());
 
     m_snake = &(m_snake_vec[0]);

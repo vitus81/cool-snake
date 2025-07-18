@@ -125,7 +125,7 @@ Game_grid_linear_t Game::get_game_state() {
 
   for (auto &f : m_food_vec) {
     GET_CELL(tmp, f.get_position().x, f.get_position().y) =
-        STATE_FOOD_BASELINE +
+        (float)STATE_FOOD_BASELINE +
         (float)get_unique_food_id(f.get_category(), f.get_type());
   }
 
@@ -141,12 +141,12 @@ Game_grid_linear_t Game::get_game_state() {
   //       printf("★");
   //     } else {
   //       printf("∙");
-  //     }      
+  //     }
   //   }
   //   printf("\n");
   // }
   // printf("\n");
-  
+
   return tmp;
 }
 Game_grid_t Game::get_grid_blocked() {
@@ -208,7 +208,8 @@ void Game::check_food_collision() {
       m_bonus_multiplier = m_next_bonus_multiplier;
 
       // Update streak (A surprise doesn't alter an existing streak)
-      if (snake.get_controller() == PLAYER) {
+      if (snake.get_controller() == PLAYER ||
+          snake.get_controller() == AI_TRAIN) {
         if (collision_cat != FOOD_SURPRISE) {
           if (get_unique_food_id(collision_cat, collision_type) ==
               m_last_food_type) {
@@ -228,18 +229,21 @@ void Game::check_food_collision() {
       int prev_score = m_score;
       if (collision_cat == FOOD_REGULAR) {
         snake.mark_to_add_segment();
-        if (snake.get_controller() == PLAYER) {
+        if (snake.get_controller() == PLAYER ||
+            snake.get_controller() == AI_TRAIN) {
           PlaySound(m_food_sound);
           m_score += (m_total_multiplier * game_globals.score_regular);
         }
       } else if (collision_cat == FOOD_BONUS) {
         snake.mark_to_remove_segments(game_globals.length_bonus);
-        if (snake.get_controller() == PLAYER) {
+        if (snake.get_controller() == PLAYER ||
+            snake.get_controller() == AI_TRAIN) {
           PlaySound(m_hourglass_sound);
           m_score += (m_total_multiplier * game_globals.score_bonus);
         }
       } else if (collision_cat == FOOD_SURPRISE) {
-        if (snake.get_controller() == PLAYER) {
+        if (snake.get_controller() == PLAYER ||
+            snake.get_controller() == AI_TRAIN) {
           int val = GetRandomValue(0, 100);
           if (val <= game_globals.prob_surprise_bonus) {
             PlaySound(m_bonus10x_sound);
@@ -347,7 +351,8 @@ void Game::check_game_over() {
 
     if (collision_with_edge || collision_with_tail || collision_with_wall ||
         collision_with_enemy) {
-      if (snake.get_controller() == PLAYER) {
+      if (snake.get_controller() == PLAYER ||
+          snake.get_controller() == AI_TRAIN) {
         PlaySound(m_gameover_sound);
         game_over();
       } else {
@@ -385,8 +390,10 @@ void Game::check_spawn() {
 }
 
 Snake Game::spawn_snake() {
-  int rnd_mode = GetRandomValue(1, NUM_CONTROLLERS - 1);
+  int rnd_mode =
+      GetRandomValue(1, NUM_CONTROLLERS - 2); // excluding the "AI_TRAIN" mode
   Snake_ctrl_t ctrl = (Snake_ctrl_t)rnd_mode;
+  // ctrl = AI_EAT_CLOSEST;
   Game_grid_t grid = get_grid_blocked();
 
   int best_x = 0;
@@ -437,7 +444,12 @@ void Game::game_over() {
     m_food_vec.push_back(Food(get_forbidden()));
   }
   m_snake_vec.clear();
+#ifndef TRAINING
   m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
+#else
+  m_snake_vec.push_back(Snake(AI_TRAIN, game_globals.initial_player_pos));
+#endif
+
   m_snake_vec.push_back(spawn_snake());
   m_snake = &(m_snake_vec[0]);
   for (auto &snake : m_snake_vec)
@@ -521,16 +533,16 @@ int main() {
 
     BeginDrawing();
 
-    if (IsKeyPressed(KEY_UP)) {
+    if (IsKeyPressed(KEY_UP) && game.m_snake->get_controller() == PLAYER) {
       game.m_snake->try_move_up();
     }
-    if (IsKeyPressed(KEY_DOWN)) {
+    if (IsKeyPressed(KEY_DOWN) && game.m_snake->get_controller() == PLAYER) {
       game.m_snake->try_move_down();
     }
-    if (IsKeyPressed(KEY_LEFT)) {
+    if (IsKeyPressed(KEY_LEFT) && game.m_snake->get_controller() == PLAYER) {
       game.m_snake->try_move_left();
     }
-    if (IsKeyPressed(KEY_RIGHT)) {
+    if (IsKeyPressed(KEY_RIGHT) && game.m_snake->get_controller() == PLAYER) {
       game.m_snake->try_move_right();
     }
     if (IsKeyPressed(KEY_ENTER)) {
@@ -542,10 +554,9 @@ int main() {
     }
 
     if (event_triggered(0.1)) {
-        game.update();
-        // game.get_game_state();
+      game.update();
+      // game.get_game_state();
     }
-      
 
     ClearBackground(game_globals.green);
 
