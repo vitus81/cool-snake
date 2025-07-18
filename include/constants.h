@@ -8,6 +8,7 @@
 #include <vector>
 
 typedef std::vector<std::vector<int>> Game_grid_t;
+typedef std::vector<float> Game_grid_linear_t;
 
 struct game_globals_struct {
   Color green = {192, 230, 149, 255};

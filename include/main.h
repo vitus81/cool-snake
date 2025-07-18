@@ -100,6 +100,7 @@ public:
   void check_spawn();
   Snake spawn_snake();
   Game_grid_t get_grid_blocked();
+  Game_grid_linear_t get_game_state();
 
 private:
   std::vector<float> m_spawn_queue;

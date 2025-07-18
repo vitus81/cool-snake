@@ -56,7 +56,7 @@ bool event_triggered(double interval) {
 }
 
 int get_unique_food_id(int cat, int type) {
-  return 1000 * (cat == FOOD_SURPRISE) + 100 * (cat == FOOD_BONUS) + type;
+  return (5 * (cat == FOOD_SURPRISE) + 4 * (cat == FOOD_BONUS) + type);
 };
 
 void Game::draw() {
@@ -101,6 +101,54 @@ std::vector<Vector2> Game::get_blocked() {
   return blocked;
 }
 
+typedef enum {
+  STATE_MYHEAD = -127,
+  STATE_EMPTY = 0,
+  STATE_FOOD_BASELINE = 64,
+  STATE_BLOCKED = 127
+} Cell_state_t;
+
+#define GET_CELL(v, x, y) (v[y * game_globals.cell_count + x])
+
+Game_grid_linear_t Game::get_game_state() {
+
+  std::vector<float> tmp;
+  tmp.resize(game_globals.cell_count * game_globals.cell_count, STATE_EMPTY);
+
+  std::vector<Vector2> blocked = get_blocked();
+  for (auto &f : blocked) {
+    if (f.x >= 0 && f.y >= 0 && f.x < game_globals.cell_count &&
+        f.y < game_globals.cell_count) {
+      GET_CELL(tmp, f.x, f.y) = STATE_BLOCKED;
+    }
+  }
+
+  for (auto &f : m_food_vec) {
+    GET_CELL(tmp, f.get_position().x, f.get_position().y) =
+        STATE_FOOD_BASELINE +
+        (float)get_unique_food_id(f.get_category(), f.get_type());
+  }
+
+  GET_CELL(tmp, m_snake->get_head().x, m_snake->get_head().y) = STATE_MYHEAD;
+
+  // for (int y = 0; y < game_globals.cell_count; y++) {
+  //   for (int x = 0; x < game_globals.cell_count; x++) {
+  //     if (GET_CELL(tmp,x,y) == STATE_EMPTY) {
+  //       printf("□");
+  //     } else if (GET_CELL(tmp,x,y) == STATE_BLOCKED) {
+  //       printf("■");
+  //     } else if (GET_CELL(tmp,x,y) == STATE_MYHEAD) {
+  //       printf("★");
+  //     } else {
+  //       printf("∙");
+  //     }      
+  //   }
+  //   printf("\n");
+  // }
+  // printf("\n");
+  
+  return tmp;
+}
 Game_grid_t Game::get_grid_blocked() {
   std::vector<std::vector<int>> tmp;
   tmp.resize(game_globals.cell_count);
@@ -339,7 +387,6 @@ void Game::check_spawn() {
 Snake Game::spawn_snake() {
   int rnd_mode = GetRandomValue(1, NUM_CONTROLLERS - 1);
   Snake_ctrl_t ctrl = (Snake_ctrl_t)rnd_mode;
-  //Snake_ctrl_t ctrl = AI_CHASE;
   Game_grid_t grid = get_grid_blocked();
 
   int best_x = 0;
@@ -401,8 +448,9 @@ void Game::game_over() {
 void Game::update() {
   if (m_running) {
     for (auto &snake : m_snake_vec) {
-      Game_grid_t grid = get_grid_blocked();
-      snake.update(grid, m_food_vec, m_snake->get_body());
+      Game_grid_t grid_blocked = get_grid_blocked();
+      Game_grid_linear_t grid_full = get_game_state();
+      snake.update(grid_blocked, m_food_vec, m_snake->get_body());
     }
     check_spawn();
     check_food_collision();
@@ -493,8 +541,11 @@ int main() {
       game.m_paused = !game.m_paused;
     }
 
-    if (event_triggered(0.1))
-      game.update();
+    if (event_triggered(0.1)) {
+        game.update();
+        // game.get_game_state();
+    }
+      
 
     ClearBackground(game_globals.green);
 
