@@ -46,7 +46,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x64/Debug/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
@@ -57,7 +57,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x86/Debug/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
@@ -68,7 +68,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/ARM64/Debug/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS)
@@ -79,7 +79,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x64/Release/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
@@ -90,7 +90,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x86/Release/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
@@ -101,7 +101,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/ARM64/Release/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -s
@@ -112,7 +112,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x64/Debug_RGFW/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
@@ -123,7 +123,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x86/Debug_RGFW/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
@@ -134,7 +134,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/ARM64/Debug_RGFW/cool-snake
 DEFINES += -DDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -g -std=c++20
 LIBS += ../../bin/Debug_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Debug_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS)
@@ -145,7 +145,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x64/Release_RGFW/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
@@ -156,7 +156,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/x86/Release_RGFW/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
@@ -167,7 +167,7 @@ TARGET = $(TARGETDIR)/cool-snake
 OBJDIR = obj/ARM64/Release_RGFW/cool-snake
 DEFINES += -DNDEBUG -DPLATFORM_DESKTOP_RGFW -DGRAPHICS_API_OPENGL_33 -D_GLFW_X11 -D_GNU_SOURCE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c17
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c++17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -Wshadow -O2 -std=c++20
 LIBS += ../../bin/Release_RGFW/libraylib.a -lpthread -lm -ldl -lrt -lX11
 LDDEPS += ../../bin/Release_RGFW/libraylib.a
 ALL_LDFLAGS += $(LDFLAGS) -s

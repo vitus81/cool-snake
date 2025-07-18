@@ -339,6 +339,7 @@ void Game::check_spawn() {
 Snake Game::spawn_snake() {
   int rnd_mode = GetRandomValue(1, NUM_CONTROLLERS - 1);
   Snake_ctrl_t ctrl = (Snake_ctrl_t)rnd_mode;
+  //Snake_ctrl_t ctrl = AI_CHASE;
   Game_grid_t grid = get_grid_blocked();
 
   int best_x = 0;
@@ -401,7 +402,7 @@ void Game::update() {
   if (m_running) {
     for (auto &snake : m_snake_vec) {
       Game_grid_t grid = get_grid_blocked();
-      snake.update(grid);
+      snake.update(grid, m_food_vec, m_snake->get_body());
     }
     check_spawn();
     check_food_collision();

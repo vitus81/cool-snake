@@ -142,6 +142,13 @@ if (downloadRaylib) then
         location "build_files/"
         targetdir "../bin/%{cfg.buildcfg}"
 
+        cppdialect "C++20"
+        toolset "gcc"
+    
+        filter "action:gmake"
+            buildoptions { "-std=c++20" }            
+            gccprefix ("g++-11")
+
         filter {"system:windows", "configurations:Release or Release_RGFW", "action:gmake*"}
             kind "WindowedApp"
             buildoptions { "-Wl,--subsystem,windows" }
@@ -175,7 +182,7 @@ if (downloadRaylib) then
         links {"raylib"}
 
         cdialect "C17"
-        cppdialect "C++17"
+        cppdialect "C++20"
 
         includedirs {raylib_dir .. "/src" }
         includedirs {raylib_dir .."/src/external" }

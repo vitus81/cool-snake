@@ -1,4 +1,5 @@
 #include "snake.h"
+#include "astar.hpp"
 #include "constants.h"
 
 #include <iostream>
@@ -6,12 +7,103 @@
 
 extern game_globals_struct game_globals;
 
+std::vector<Vector2> filter_food_by_type(std::vector<Food> &food, int cat,
+                                         int type, bool accept_bonus) {
+  std::vector<Vector2> tmp;
+  for (auto &item : food) {
+    if (item.get_category() == cat && item.get_type() == type) {
+      tmp.push_back(item.get_position());
+    }
+  }
+  if (accept_bonus) {
+    for (auto &item : food) {
+      if (item.get_category() == FOOD_BONUS) {
+        tmp.push_back(item.get_position());
+      }
+    }
+  }
+  return tmp;
+}
+
 bool is_vec2_in_vec(Vector2 t, std::vector<Vector2> v) {
   for (auto &vv : v) {
     if (Vector2Equals(t, vv))
       return true;
   }
   return false;
+}
+
+Vector2 Snake::find_path(Game_grid_t &grid, Vector2 target, bool *fail) {
+  AStar::AStarFast pathFinder;
+  pathFinder.setHeuristic(AStar::Heuristic::manhattan);
+  pathFinder.setDiagonalMovement(false);
+  *fail = false;
+
+  std::vector<uint32_t> world(game_globals.cell_count * game_globals.cell_count,
+                              0);
+
+  for (int y = 0; y < game_globals.cell_count; y++) {
+    for (int x = 0; x < game_globals.cell_count; x++) {
+      world[game_globals.cell_count * y + x] = grid[y][x];
+    }
+  }
+
+  // target can't be an obstacle!
+  world[game_globals.cell_count * target.y + target.x] = 0;
+
+  // set lambda function to check if is an obstacle (value == 1)
+  auto isObstacle = [](uint32_t value) -> bool { return value == 1; };
+  pathFinder.setObstacle(isObstacle);
+
+  auto path = pathFinder.findPath(
+      {get_head().x, get_head().y}, {target.x, target.y}, world,
+      {game_globals.cell_count, game_globals.cell_count});
+
+  Vector2 first_move;
+  Vector2 direction, old_direction;
+
+  if (path.size() >= 2) {
+    first_move.x = path[path.size() - 2].x;
+    first_move.y = path[path.size() - 2].y;
+
+    old_direction = m_direction;
+    direction = Vector2Subtract(first_move, get_head());
+    direction.x = (float)(int)(direction.x);
+    direction.y = (float)(int)(direction.y);
+
+    // direction.x = (direction.x > 0) ? 1 : ((direction.x < 0) ? -1 : 0);
+    // direction.y = (direction.y > 0) ? 1 : ((direction.y < 0) ? -1 : 0);
+    // direction.x = (direction.x < -1) ? -1 : direction.x;
+    // direction.y = (direction.y < -1) ? -1 : direction.y;
+    // direction.x = (direction.x > 1) ? 1 : direction.x;
+    // direction.y = (direction.y > 1) ? 1 : direction.y;
+
+    if (Vector2Equals(Vector2Add(direction, old_direction), Vector2{0, 0})) {
+      std::cout << "Direction conflict! Forced direction" << std::endl;
+      direction = m_direction;
+    }
+
+  } else {
+    std::cout << "No pathfinding! Forced direction" << std::endl;
+    direction = m_direction;
+    *fail = true;
+  }
+
+  // std::cout << "Head is at " << get_head().x << "," << get_head().y
+  //           << std::endl;
+  // std::cout << "Target is at " << target.x << "," << target.y << std::endl;
+  // std::cout << "1st move is at " << first_move.x << "," << first_move.y
+  //           << std::endl;
+  // std::cout << "first dir: " << Vector2Subtract(first_move, get_head()).x <<
+  // " "
+  //           << Vector2Subtract(first_move, get_head()).y << std::endl;
+  // std::cout << "actual: " << direction.x << " " << direction.y << std::endl;
+
+  // // Print the path
+  // for (auto &p : path) {
+  //   std::cout << p.x << " " << p.y << std::endl;
+  // }
+  return direction;
 }
 
 Snake::Snake(Snake_ctrl_t ctrl, std::deque<Vector2> init_body) {
@@ -33,6 +125,14 @@ void Snake::set_color() {
     break;
   case AI_OUTER:
     m_color = {130, 68, 150, 255};
+    m_head_color = m_color;
+    break;
+  case AI_EAT_APPLES:
+    m_color = {200, 0, 0, 255};
+    m_head_color = m_color;
+    break;
+  case AI_CHASE:
+    m_color = {50, 121, 168, 255};
     m_head_color = m_color;
     break;
   default:
@@ -58,23 +158,34 @@ void Snake::draw() {
         (GetTime() - m_highlight_time > game_globals.head_highlight_timeout)) {
       m_head_color = m_color;
     }
-    DrawRectangleRounded(rec, 0.5, 6, (i == 0) ? m_head_color : m_color);
+    if (i == 0) {
+      Rectangle rec{x + game_globals.offset, y + game_globals.offset,
+                    (float)game_globals.cell_size,
+                    (float)game_globals.cell_size};
+      DrawRectangleRounded(rec, 0.5, 6, m_head_color);
+    } else {
+      Rectangle rec{x + game_globals.offset+3, y + game_globals.offset+3,
+                    (float)game_globals.cell_size-6,
+                    (float)game_globals.cell_size-6};      
+      DrawRectangleRounded(rec, 0.25, 6, m_color);
+    }
   }
 }
 
-void Snake::decide_direction(Game_grid_t &grid) {
+void Snake::decide_direction(Game_grid_t &grid, std::vector<Food> &food,
+                             std::deque<Vector2> player_body) {
 
   const std::vector<Vector2> directions = {Vector2{0, -1}, Vector2{0, 1},
                                            Vector2{-1, 0}, Vector2{1, 0}};
 
-  if (m_controller == AI_RANDOM_WALK) {
+  // for (int j = 0; j < game_globals.cell_count; j++) {
+  //   for (int i = 0; i < game_globals.cell_count; i++) {
+  //     printf("%s", grid[j][i] ? "■" : "□");
+  //   }
+  //   printf("\n");
+  // }
 
-    // for (int j = 0; j < game_globals.cell_count; j++) {
-    //   for (int i = 0; i < game_globals.cell_count; i++) {
-    //     printf("%s", grid[j][i] ? "■" : "□");
-    //   }
-    //   printf("\n");
-    // }
+  if (m_controller == AI_RANDOM_WALK) {
 
     int n = -1;
     Vector2 candidate;
@@ -159,13 +270,57 @@ void Snake::decide_direction(Game_grid_t &grid) {
         m_direction = allowed[max_idx];
       }
     }
+  } else if (m_controller == AI_EAT_APPLES) {
+    m_direction = ai_eat_apples(grid, food);
+  } else if (m_controller == AI_CHASE) {
+    m_direction = ai_chase(grid, player_body);
   }
 }
 
-void Snake::update(Game_grid_t &grid) {
+Vector2 Snake::ai_chase(Game_grid_t &grid, std::deque<Vector2> player_body) {
+
+  Vector2 direction;
+  Vector2 target = player_body.back();
+  target.x += GetRandomValue(-3, 3);
+  target.y += GetRandomValue(-3, 3);
+  target.x = (target.x < 0) ? 0 : target.x;
+  target.y = (target.y < 0) ? 0 : target.y;
+  target.x = (target.x >= game_globals.cell_count) ? game_globals.cell_count - 1
+                                                   : target.x;
+  target.y = (target.y >= game_globals.cell_count) ? game_globals.cell_count - 1
+                                                   : target.y;
+  bool fail;
+  direction = find_path(grid, target, &fail);
+  return direction;
+}
+
+#define FOOD_APPLE 0
+Vector2 Snake::ai_eat_apples(Game_grid_t &grid, std::vector<Food> &food) {
+
+  Vector2 target;
+  bool *fail;
+  std::vector<Vector2> tmp =
+      filter_food_by_type(food, FOOD_REGULAR, FOOD_APPLE, true);
+  if (tmp.size() == 0) {
+    if (abs(get_head().x - (game_globals.cell_count - 1) / 2) < 3 &&
+        abs(get_head().y - (game_globals.cell_count - 1) / 2) < 3) {
+      target.x = game_globals.cell_count - 1;
+      target.y = game_globals.cell_count - 1;
+    } else {
+      target.x = (game_globals.cell_count - 1) / 2;
+      target.y = (game_globals.cell_count - 1) / 2;
+    }
+  } else {
+    target = tmp[0]; // go to the first apple found
+  }
+  return find_path(grid, target, fail);
+}
+
+void Snake::update(Game_grid_t &grid, std::vector<Food> &food,
+                   std::deque<Vector2> player_body) {
 
   if (m_controller != PLAYER)
-    decide_direction(grid);
+    decide_direction(grid, food, player_body);
 
   m_body.push_front(Vector2Add(m_body[0], m_direction));
   if (m_add_segment) {

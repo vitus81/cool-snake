@@ -58,6 +58,8 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "unordered_set": "cpp",
+        "*.m": "cpp"
     }
 }
