@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-//#define TRAINING
+#define TRAINING
 
 extern game_globals_struct game_globals;
 
@@ -106,7 +106,9 @@ public:
   void check_spawn();
   Snake spawn_snake();
   Game_grid_t get_grid_blocked();
-  Game_grid_linear_t get_game_state();
+  Game_grid_linear_t get_game_state(bool verbose);
+  int play_game(); // for headless mode
+  int play_batch(int num); // for headless mode
 
 private:
   std::vector<float> m_spawn_queue;

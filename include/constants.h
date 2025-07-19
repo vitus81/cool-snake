@@ -17,9 +17,9 @@ struct game_globals_struct {
 
   float head_highlight_timeout = 0.20;
 
-  int cell_size = 30;
-  int cell_count = 25;
-  int offset = 75;
+  const int cell_size = 30;
+  const int cell_count = 25;
+  const int offset = 75;
   std::string img_path = "./resources/";
 
   int prob_bonus = 5;
@@ -36,6 +36,7 @@ struct game_globals_struct {
   int timeout_bonus = 5; // seconds
 
   int surprise_bonus_multiplier = 10;
+  int snake_spawn_delay = 0; // seconds
 
   bool sound_on = false;
 

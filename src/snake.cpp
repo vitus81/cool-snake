@@ -59,8 +59,9 @@ Vector2 Snake::find_path(Game_grid_t &grid, Vector2 target, bool *fail) {
       {get_head().x, get_head().y}, {target.x, target.y}, world,
       {game_globals.cell_count, game_globals.cell_count});
 
-  Vector2 first_move;
-  Vector2 direction, old_direction;
+  Vector2 first_move = Vector2{0,0};
+  Vector2 direction = Vector2{0,1};
+  Vector2 old_direction = m_direction;
 
   if (path.size() >= 2) {
     first_move.x = path[path.size() - 2].x;
@@ -149,9 +150,6 @@ void Snake::draw() {
   for (int i = 0; i < m_body.size(); i++) {
     float x = m_body[i].x * game_globals.cell_size;
     float y = m_body[i].y * game_globals.cell_size;
-
-    Rectangle rec{x + game_globals.offset, y + game_globals.offset,
-                  (float)game_globals.cell_size, (float)game_globals.cell_size};
 
     if (m_head_highlight) {
       m_head_color = game_globals.head_highlight_color;
@@ -287,7 +285,7 @@ void Snake::decide_direction(Game_grid_t &grid, std::vector<Food> &food,
 
 Vector2 Snake::ai_chase(Game_grid_t &grid, std::deque<Vector2> player_body) {
 
-  Vector2 direction;
+  Vector2 direction = Vector2{0, 1};
   Vector2 target = player_body.back();
   target.x += GetRandomValue(-3, 3);
   target.y += GetRandomValue(-3, 3);
@@ -326,7 +324,7 @@ Vector2 Snake::ai_eat_apples(Game_grid_t &grid, std::vector<Food> &food) {
 
 Vector2 Snake::ai_eat_closest(Game_grid_t &grid, std::vector<Food> &food) {
 
-  Vector2 target;
+  Vector2 target = Vector2{0,0};
   bool *fail;
   float shortest = 10000.0f;
   int best_idx = 0;

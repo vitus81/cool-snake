@@ -13,6 +13,7 @@ https://creativecommons.org/publicdomain/zero/1.0/
 #include "raylib.h"
 #include "resource_dir.h" // utility header for SearchAndSetResourceDir
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -111,7 +112,7 @@ typedef enum {
 
 #define GET_CELL(v, x, y) (v[y * game_globals.cell_count + x])
 
-Game_grid_linear_t Game::get_game_state() {
+Game_grid_linear_t Game::get_game_state(bool verbose = false) {
 
   std::vector<float> tmp;
   tmp.resize(game_globals.cell_count * game_globals.cell_count, STATE_EMPTY);
@@ -130,23 +131,29 @@ Game_grid_linear_t Game::get_game_state() {
         (float)get_unique_food_id(f.get_category(), f.get_type());
   }
 
-  GET_CELL(tmp, m_snake->get_head().x, m_snake->get_head().y) = STATE_MYHEAD;
+  auto h = m_snake->get_head();
+  if ((h.x >= 0 && h.y >= 0 && h.x < game_globals.cell_count &&
+       h.y < game_globals.cell_count)) {
+    GET_CELL(tmp, h.x, h.y) = STATE_MYHEAD;
+  }
 
-  // for (int y = 0; y < game_globals.cell_count; y++) {
-  //   for (int x = 0; x < game_globals.cell_count; x++) {
-  //     if (GET_CELL(tmp,x,y) == STATE_EMPTY) {
-  //       printf("□");
-  //     } else if (GET_CELL(tmp,x,y) == STATE_BLOCKED) {
-  //       printf("■");
-  //     } else if (GET_CELL(tmp,x,y) == STATE_MYHEAD) {
-  //       printf("★");
-  //     } else {
-  //       printf("∙");
-  //     }
-  //   }
-  //   printf("\n");
-  // }
-  // printf("\n");
+  if (verbose) {
+    for (int y = 0; y < game_globals.cell_count; y++) {
+      for (int x = 0; x < game_globals.cell_count; x++) {
+        if (GET_CELL(tmp, x, y) == STATE_EMPTY) {
+          printf("□");
+        } else if (GET_CELL(tmp, x, y) == STATE_BLOCKED) {
+          printf("■");
+        } else if (GET_CELL(tmp, x, y) == STATE_MYHEAD) {
+          printf("★");
+        } else {
+          printf("∙");
+        }
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
 
   return tmp;
 }
@@ -166,12 +173,6 @@ Game_grid_t Game::get_grid_blocked() {
         f.y < game_globals.cell_count)
       tmp[f.y][f.x] = 1;
   }
-  // for (int j = 0; j < game_globals.cell_count; j++) {
-  //   for (int i = 0; i < game_globals.cell_count; i++) {
-  //     printf("%s", tmp[j][i]?"■":"□");
-  //   }
-  //   printf("\n");
-  // }
   return tmp;
 }
 
@@ -232,14 +233,16 @@ void Game::check_food_collision() {
         snake.mark_to_add_segment();
         if (snake.get_controller() == PLAYER ||
             snake.get_controller() == AI_TRAIN) {
-          if (game_globals.sound_on) PlaySound(m_food_sound);
+          if (game_globals.sound_on)
+            PlaySound(m_food_sound);
           m_score += (m_total_multiplier * game_globals.score_regular);
         }
       } else if (collision_cat == FOOD_BONUS) {
         snake.mark_to_remove_segments(game_globals.length_bonus);
         if (snake.get_controller() == PLAYER ||
             snake.get_controller() == AI_TRAIN) {
-          if (game_globals.sound_on) PlaySound(m_hourglass_sound);
+          if (game_globals.sound_on)
+            PlaySound(m_hourglass_sound);
           m_score += (m_total_multiplier * game_globals.score_bonus);
         }
       } else if (collision_cat == FOOD_SURPRISE) {
@@ -247,10 +250,12 @@ void Game::check_food_collision() {
             snake.get_controller() == AI_TRAIN) {
           int val = GetRandomValue(0, 100);
           if (val <= game_globals.prob_surprise_bonus) {
-            if (game_globals.sound_on) PlaySound(m_bonus10x_sound);
+            if (game_globals.sound_on)
+              PlaySound(m_bonus10x_sound);
             m_next_bonus_multiplier = 10;
           } else {
-            if (game_globals.sound_on) PlaySound(m_wall_sound);
+            if (game_globals.sound_on)
+              PlaySound(m_wall_sound);
             int snake_len = snake.get_body().size();
             int max_wall_len = 3;
             if (snake_len <= 10) {
@@ -269,11 +274,11 @@ void Game::check_food_collision() {
         }
       }
       if (m_score >= 100 && prev_score < 100)
-        spawn_in_seconds(1);
+        spawn_in_seconds(game_globals.snake_spawn_delay);
       if (m_score >= 200 && prev_score < 200)
-        spawn_in_seconds(1);
+        spawn_in_seconds(game_globals.snake_spawn_delay);
       if (m_score >= 300 && prev_score < 300)
-        spawn_in_seconds(1);
+        spawn_in_seconds(game_globals.snake_spawn_delay);
     }
   }
 }
@@ -355,7 +360,8 @@ void Game::check_game_over() {
         collision_with_enemy) {
       if (snake.get_controller() == PLAYER ||
           snake.get_controller() == AI_TRAIN) {
-        if (game_globals.sound_on) PlaySound(m_gameover_sound);
+        if (game_globals.sound_on)
+          PlaySound(m_gameover_sound);
         game_over();
       } else {
         despawn_snakes.push_back(ii);
@@ -383,7 +389,7 @@ void Game::spawn_in_seconds(float timeout) {
 void Game::check_spawn() {
   float curr = GetTime();
   for (auto it = m_spawn_queue.begin(); it != m_spawn_queue.end();) {
-    if (curr > (*it)) {
+    if (curr >= (*it)) {
       m_snake_vec.push_back(spawn_snake());
       it = m_spawn_queue.erase(it);
     } else
@@ -429,11 +435,11 @@ Snake Game::spawn_snake() {
 
 void Game::game_over() {
 
-  get_grid_blocked();
+  // get_game_state(true);
+
   m_running = false;
   m_paused = false;
   m_first_game = false;
-  m_food_vec.clear();
   m_last_score = m_score;
   m_score = 0;
   m_streak_len = 0;
@@ -442,11 +448,12 @@ void Game::game_over() {
   m_bonus_multiplier = 1;
   m_total_multiplier = 1;
   m_last_food_type = -1;
+  m_food_vec.clear();
   for (int i = 0; i < NUM_FOOD_INSTANCES; i++) {
     m_food_vec.push_back(Food(get_forbidden()));
   }
-  m_snake_vec.clear();
   m_spawn_queue.clear();
+  m_snake_vec.clear();
 #ifndef TRAINING
   m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
 #else
@@ -461,10 +468,15 @@ void Game::game_over() {
 
 void Game::update() {
   if (m_running) {
+    int i = 0;
+    std::deque<Vector2> player_body = m_snake->get_body();
     for (auto &snake : m_snake_vec) {
       Game_grid_t grid_blocked = get_grid_blocked();
       Game_grid_linear_t grid_full = get_game_state();
-      snake.update(grid_blocked, m_food_vec, m_snake->get_body());
+      // printf("Updating snake %d...\t", i);
+      snake.update(grid_blocked, m_food_vec, player_body);
+      // printf("DONE\n");
+      i++;
     }
     check_spawn();
     check_food_collision();
@@ -555,6 +567,9 @@ int main() {
       game.m_running = !game.m_running;
       game.m_paused = !game.m_paused;
     }
+    if (IsKeyPressed(KEY_S)) {
+      game_globals.sound_on = !game_globals.sound_on;
+    }
 
     if (event_triggered(0.1)) {
       game.update();
@@ -582,10 +597,42 @@ int main() {
 #else
 #define MAX_MOVES 500
 #define MAX_GAMES 25
-std::vector<int> scores;
+
+int Game::play_batch(int num) {
+  std::vector<int> scores;
+  SetRandomSeed(0xaabbccff);
+  for (int i = 0; i < num; i++) {
+    scores.push_back(play_game());
+  }
+  return *std::min_element(scores.begin(), scores.end());
+}
+
+int Game::play_game() {
+  game_over();
+  int moves = 0;
+  m_running = true;
+  while (1) {
+    update();
+    moves++;
+    // get_game_state(1);
+    // draw();
+    if (m_running == false || moves >= MAX_MOVES) {
+
+      if (m_running == false) {
+        // printf("Game over after %d moves (score was %d) --> fitness %d\n",
+        //        moves, m_last_score, -1000 + moves);
+        return (-1000 + moves);
+      } else {
+        // printf("Score: %d after %d moves\n", m_score, moves);
+        return m_score;
+      }
+    }
+  }
+}
+
 int main() {
 
-  // Tell the window to use vsync and work on high DPI displays
+  // // Tell the window to use vsync and work on high DPI displays
   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
   std::cout << "Starting the game..." << std::endl;
@@ -599,53 +646,13 @@ int main() {
   load_textures();
 
   Game game = Game();
-  game.m_running = true;
-  int games = 0;
-  int moves = 0;
+  int tmp_score;
 
-  while (!WindowShouldClose()) {
-
-    BeginDrawing();
-
-    //if (event_triggered(0.01)) {
-      game.update();
-      moves++;
-      // game.get_game_state();
-    //}
-
-    ClearBackground(game_globals.green);
-
-    Rectangle rect = {
-        (float)(game_globals.offset - 5), (float)(game_globals.offset - 5),
-        (float)(game_globals.cell_count * game_globals.cell_size + 10),
-        (float)(game_globals.cell_count * game_globals.cell_size + 10)};
-    DrawRectangleLinesEx(rect, 5, game_globals.dark_green);
-
-    game.draw();
-    game.write_text();
-
-    if (game.m_running == false || moves >= MAX_MOVES) {
-
-      if (game.m_running == false) {
-        printf("Game over after %d moves (score was %d) --> fitness %d\n", moves,
-               game.m_last_score, -1000 + moves);
-        scores.push_back(-1000 + moves);
-      } else {
-        printf("Score: %d after %d moves\n", game.m_score, moves);
-        scores.push_back(game.m_last_score);
-        game.game_over();
-      }
-      games++;
-      moves = 0;
-      if (games >= MAX_GAMES) {
-        break;
-      }
-      game.m_running = true;
-    }
-
-    EndDrawing();
+  const int batch_size = 10;
+  for (int i = 0; i < 10; i++) {
+    tmp_score = game.play_batch(batch_size);
+    printf("Batch %3d: min. score %d\n", i + 1, tmp_score);
   }
-
   unload_textures();
   CloseWindow();
   return 0;
