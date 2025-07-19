@@ -79,12 +79,12 @@ Vector2 Snake::find_path(Game_grid_t &grid, Vector2 target, bool *fail) {
     // direction.y = (direction.y > 1) ? 1 : direction.y;
 
     if (Vector2Equals(Vector2Add(direction, old_direction), Vector2{0, 0})) {
-      std::cout << "Direction conflict! Forced direction" << std::endl;
+      // std::cout << "Direction conflict! Forced direction" << std::endl;
       direction = m_direction;
     }
 
   } else {
-    std::cout << "No pathfinding! Forced direction" << std::endl;
+    // std::cout << "No pathfinding! Forced direction" << std::endl;
     direction = m_direction;
     *fail = true;
   }
@@ -247,7 +247,7 @@ void Snake::decide_direction(Game_grid_t &grid, std::vector<Food> &food,
     }
     if (allowed.size() == 0) {
       // do nothing, will die
-      std::cout << "No free cells!" << std::endl;
+      // std::cout << "No free cells!" << std::endl;
     } else {
       int rnd_dec = GetRandomValue(0, 100);
       const int prob_random = 10;

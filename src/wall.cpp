@@ -96,8 +96,8 @@ Wall::Wall(int max_len, std::vector<Vector2> forbidden, Vector2 snake_head) {
     m_tiles = tiles;
     m_direction = direction;
   } else {
-    std::cout << "Impossible to find a valid wall after " << trials << "trials"
-              << std::endl;
+    // std::cout << "Impossible to find a valid wall after " << trials << "trials"
+    //           << std::endl;
   }
 }
 

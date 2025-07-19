@@ -37,6 +37,8 @@ struct game_globals_struct {
 
   int surprise_bonus_multiplier = 10;
 
+  bool sound_on = false;
+
   std::deque<Vector2> initial_player_pos = {Vector2{0, 9}, Vector2{-1, 9}, Vector2{-2, 9}};
 
 };

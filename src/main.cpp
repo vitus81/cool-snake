@@ -14,6 +14,7 @@ https://creativecommons.org/publicdomain/zero/1.0/
 #include "resource_dir.h" // utility header for SearchAndSetResourceDir
 
 #include <iostream>
+#include <vector>
 
 game_globals_struct game_globals;
 
@@ -231,14 +232,14 @@ void Game::check_food_collision() {
         snake.mark_to_add_segment();
         if (snake.get_controller() == PLAYER ||
             snake.get_controller() == AI_TRAIN) {
-          PlaySound(m_food_sound);
+          if (game_globals.sound_on) PlaySound(m_food_sound);
           m_score += (m_total_multiplier * game_globals.score_regular);
         }
       } else if (collision_cat == FOOD_BONUS) {
         snake.mark_to_remove_segments(game_globals.length_bonus);
         if (snake.get_controller() == PLAYER ||
             snake.get_controller() == AI_TRAIN) {
-          PlaySound(m_hourglass_sound);
+          if (game_globals.sound_on) PlaySound(m_hourglass_sound);
           m_score += (m_total_multiplier * game_globals.score_bonus);
         }
       } else if (collision_cat == FOOD_SURPRISE) {
@@ -246,10 +247,10 @@ void Game::check_food_collision() {
             snake.get_controller() == AI_TRAIN) {
           int val = GetRandomValue(0, 100);
           if (val <= game_globals.prob_surprise_bonus) {
-            PlaySound(m_bonus10x_sound);
+            if (game_globals.sound_on) PlaySound(m_bonus10x_sound);
             m_next_bonus_multiplier = 10;
           } else {
-            PlaySound(m_wall_sound);
+            if (game_globals.sound_on) PlaySound(m_wall_sound);
             int snake_len = snake.get_body().size();
             int max_wall_len = 3;
             if (snake_len <= 10) {
@@ -313,24 +314,25 @@ void Game::check_game_over() {
         snake.get_head().y >= game_globals.cell_count ||
         snake.get_head().y < 0) {
       collision_with_edge = true;
-      std::cout << "Collision of snake " << ii << " with edge at "
-                << snake.get_head().x << "," << snake.get_head().y << std::endl;
+      // std::cout << "Collision of snake " << ii << " with edge at "
+      //           << snake.get_head().x << "," << snake.get_head().y <<
+      //           std::endl;
     }
     std::deque<Vector2> body = snake.get_body();
     for (int i = 1; i < body.size(); i++) {
       if (Vector2Equals(snake.get_head(), body[i])) {
         collision_with_tail = true;
-        std::cout << "Collision of snake " << ii << " with tail at "
-                  << body[i].x << "," << body[i].y << std::endl;
+        // std::cout << "Collision of snake " << ii << " with tail at "
+        //           << body[i].x << "," << body[i].y << std::endl;
       }
     }
     for (auto &wall : m_wall_vec) {
       for (auto &tile : wall.get_tiles()) {
         if (Vector2Equals(snake.get_head(), tile)) {
           collision_with_wall = true;
-          std::cout << "Collision of snake " << ii << " with wall at "
-                    << snake.get_head().x << "," << snake.get_head().y
-                    << std::endl;
+          // std::cout << "Collision of snake " << ii << " with wall at "
+          //           << snake.get_head().x << "," << snake.get_head().y
+          //           << std::endl;
         }
       }
     }
@@ -341,9 +343,9 @@ void Game::check_game_over() {
         for (auto &tile : m_snake_vec[jj].get_body()) {
           if (Vector2Equals(snake.get_head(), tile)) {
             collision_with_enemy = true;
-            std::cout << "Collision of snake " << ii << " with snake " << jj
-                      << " at " << snake.get_head().x << ","
-                      << snake.get_head().y << std::endl;
+            // std::cout << "Collision of snake " << ii << " with snake " << jj
+            //           << " at " << snake.get_head().x << ","
+            //           << snake.get_head().y << std::endl;
           }
         }
       }
@@ -353,7 +355,7 @@ void Game::check_game_over() {
         collision_with_enemy) {
       if (snake.get_controller() == PLAYER ||
           snake.get_controller() == AI_TRAIN) {
-        PlaySound(m_gameover_sound);
+        if (game_globals.sound_on) PlaySound(m_gameover_sound);
         game_over();
       } else {
         despawn_snakes.push_back(ii);
@@ -415,8 +417,8 @@ Snake Game::spawn_snake() {
       best_x = x;
     }
   }
-  std::cout << "Spawning snake at x = " << best_x << " (" << best_cnt
-            << " free cells)" << std::endl;
+  // std::cout << "Spawning snake at x = " << best_x << " (" << best_cnt
+  //           << " free cells)" << std::endl;
 
   std::deque<Vector2> body;
   body.push_back(Vector2{(float)best_x, 0});
@@ -444,12 +446,12 @@ void Game::game_over() {
     m_food_vec.push_back(Food(get_forbidden()));
   }
   m_snake_vec.clear();
+  m_spawn_queue.clear();
 #ifndef TRAINING
   m_snake_vec.push_back(Snake(PLAYER, game_globals.initial_player_pos));
 #else
   m_snake_vec.push_back(Snake(AI_TRAIN, game_globals.initial_player_pos));
 #endif
-
   m_snake_vec.push_back(spawn_snake());
   m_snake = &(m_snake_vec[0]);
   for (auto &snake : m_snake_vec)
@@ -513,6 +515,7 @@ void Game::write_text() {
   }
 }
 
+#ifndef TRAINING
 int main() {
 
   // Tell the window to use vsync and work on high DPI displays
@@ -576,3 +579,75 @@ int main() {
   CloseWindow();
   return 0;
 }
+#else
+#define MAX_MOVES 500
+#define MAX_GAMES 25
+std::vector<int> scores;
+int main() {
+
+  // Tell the window to use vsync and work on high DPI displays
+  SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+
+  std::cout << "Starting the game..." << std::endl;
+  InitWindow(game_globals.cell_size * game_globals.cell_count +
+                 2 * game_globals.offset,
+             game_globals.cell_size * game_globals.cell_count +
+                 2 * game_globals.offset,
+             "Cool Snake");
+  SetTargetFPS(60);
+
+  load_textures();
+
+  Game game = Game();
+  game.m_running = true;
+  int games = 0;
+  int moves = 0;
+
+  while (!WindowShouldClose()) {
+
+    BeginDrawing();
+
+    //if (event_triggered(0.01)) {
+      game.update();
+      moves++;
+      // game.get_game_state();
+    //}
+
+    ClearBackground(game_globals.green);
+
+    Rectangle rect = {
+        (float)(game_globals.offset - 5), (float)(game_globals.offset - 5),
+        (float)(game_globals.cell_count * game_globals.cell_size + 10),
+        (float)(game_globals.cell_count * game_globals.cell_size + 10)};
+    DrawRectangleLinesEx(rect, 5, game_globals.dark_green);
+
+    game.draw();
+    game.write_text();
+
+    if (game.m_running == false || moves >= MAX_MOVES) {
+
+      if (game.m_running == false) {
+        printf("Game over after %d moves (score was %d) --> fitness %d\n", moves,
+               game.m_last_score, -1000 + moves);
+        scores.push_back(-1000 + moves);
+      } else {
+        printf("Score: %d after %d moves\n", game.m_score, moves);
+        scores.push_back(game.m_last_score);
+        game.game_over();
+      }
+      games++;
+      moves = 0;
+      if (games >= MAX_GAMES) {
+        break;
+      }
+      game.m_running = true;
+    }
+
+    EndDrawing();
+  }
+
+  unload_textures();
+  CloseWindow();
+  return 0;
+}
+#endif

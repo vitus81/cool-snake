@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-// #define TRAINING
+//#define TRAINING
 
 extern game_globals_struct game_globals;
 
